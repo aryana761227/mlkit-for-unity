@@ -25,16 +25,18 @@ android {
         versionCode **VERSIONCODE**
         versionName '**VERSIONNAME**'
         consumerProguardFiles 'proguard-unity.txt'**USER_PROGUARD**
+        multiDexEnabled true
     }
     dependencies{
         implementation("androidx.core:core:1.9.0")
         implementation("androidx.appcompat:appcompat:1.6.1")
-        implementation("com.google.mlkit:face-detection:16.1.7")
+        implementation("com.google.mlkit:face-detection:16.1.5")
         implementation("com.google.mlkit:face-mesh-detection:16.0.0-beta3")
-        implementation("androidx.camera:camera-core:1.4.2")
-        implementation("androidx.camera:camera-camera2:1.4.2")
-        implementation("androidx.camera:camera-lifecycle:1.4.2")
-        implementation("androidx.camera:camera-view:1.4.2")
+        implementation("androidx.camera:camera-core:1.2.3")
+        implementation("androidx.camera:camera-camera2:1.2.3")
+        implementation("androidx.camera:camera-lifecycle:1.2.3")
+        implementation("androidx.camera:camera-video:1.2.3")
+        implementation("androidx.camera:camera-view:1.2.3")
     }
     lintOptions {
         abortOnError false

@@ -1,26 +1,48 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Serialization;
+using System.Linq;
 
+/// <summary>
+/// Manages face detection logic and state without direct UI dependencies
+/// </summary>
 public class FaceDetectionGameController : MonoBehaviour
 {
-    [FormerlySerializedAs("cameraDisplay")] [Header("UI Elements")]
-    public RawImage CameraDisplay;
-    [FormerlySerializedAs("debugText")] public TextMeshProUGUI DebugText;
-    [FormerlySerializedAs("faceCountText")] public TextMeshProUGUI FaceCountText;
-    
-    [FormerlySerializedAs("detectionInterval")] [Header("Detection Settings")]
+    [Header("Detection Settings")]
     public float DetectionInterval = 0.2f;
     
+    [Header("Logging")]
+    public bool EnableStateLogging = true;
+    public float LoggingInterval = 1.0f;
+    
+    // Events for UI to subscribe to
+    public delegate void FaceDetectionResultEvent(FaceDetectionData data, string rawResult);
+    public event FaceDetectionResultEvent OnFaceDetectionResult;
+    
+    public delegate void CameraInitializedEvent(bool success, string message);
+    public event CameraInitializedEvent OnCameraInitialized;
+    
+    public delegate void StateLogUpdatedEvent(DeviceState state);
+    public event StateLogUpdatedEvent OnStateLogUpdated;
+    
+    // Public properties
+    public bool IsCameraInitialized => isCameraInitialized;
+    public string CurrentCameraType => currentCameraType;
+    public FaceDetectionData LastDetectionData => lastDetectionData;
+    public DeviceState CurrentState => deviceState;
+    public Texture CameraTexture => mlkitManager?.DisplayTexture;
+    
     private MLKitManager mlkitManager;
-    private bool isDetecting = false;
-    private List<GameObject> faceIndicators = new List<GameObject>();
+    private bool isCameraInitialized = false;
+    private string currentCameraType = "Front";
+    private FaceDetectionData lastDetectionData;
+    
+    // Device state tracking
+    private DeviceState deviceState = new DeviceState();
     
     void Start()
     {
+        // Get or create MLKitManager instance
         mlkitManager = MLKitManager.Instance;
         if (mlkitManager == null)
         {
@@ -28,173 +50,118 @@ public class FaceDetectionGameController : MonoBehaviour
             mlkitManager = mlkitGO.AddComponent<MLKitManager>();
         }
         
+        // Subscribe to MLKit events
         mlkitManager.OnFaceDetectionComplete += HandleFaceDetectionResult;
+        mlkitManager.OnCameraInitializedComplete += HandleCameraInitialized;
+        
+        // Start camera
         StartCamera();
+        
+        // Start logging if enabled
+        if (EnableStateLogging)
+        {
+            StartCoroutine(LogStateRoutine());
+        }
     }
     
     void StartCamera()
     {
         mlkitManager.StartCamera();
         
-        if (CameraDisplay != null)
-        {
-            CameraDisplay.texture = mlkitManager.WebCamTexture;
-            
-            if (mlkitManager.WebCamTexture != null)
-            {
-                StartCoroutine(AdjustCameraDisplay());
-            }
-        }
-        
-        StartCoroutine(DetectFacesPeriodically());
+        // Set detection interval (frames to skip)
+        // Higher values = better performance but less smooth detection
+        int interval = Mathf.RoundToInt(DetectionInterval * 30); // Assuming 30fps
+        mlkitManager.SetDetectionInterval(Mathf.Max(1, interval));
     }
     
-    IEnumerator AdjustCameraDisplay()
+    void HandleCameraInitialized(string result)
     {
-        while (mlkitManager.WebCamTexture.width == 16)
+        isCameraInitialized = result.Contains("SUCCESS");
+        
+        if (isCameraInitialized)
         {
-            yield return null;
-        }
-        
-        float cameraAspect = (float)mlkitManager.WebCamTexture.width / (float)mlkitManager.WebCamTexture.height;
-        float screenAspect = (float)Screen.width / (float)Screen.height;
-        
-        RectTransform rectTransform = CameraDisplay.GetComponent<RectTransform>();
-        
-        if (cameraAspect > screenAspect)
-        {
-            rectTransform.sizeDelta = new Vector2(Screen.width, Screen.width / cameraAspect);
+            Debug.Log("Camera initialized successfully");
+            deviceState.cameraStatus = "Initialized";
         }
         else
         {
-            rectTransform.sizeDelta = new Vector2(Screen.height * cameraAspect, Screen.height);
+            Debug.LogError("Failed to initialize camera: " + result);
+            deviceState.cameraStatus = "Failed: " + result;
         }
         
-        rectTransform.anchoredPosition = Vector2.zero;
+        // Notify UI through event
+        OnCameraInitialized?.Invoke(isCameraInitialized, result);
     }
     
-    void Update()
+    public void SwitchCamera()
     {
-        if (mlkitManager.WebCamTexture != null && mlkitManager.WebCamTexture.isPlaying)
+        if (isCameraInitialized)
         {
-            int rotation = mlkitManager.WebCamTexture.videoRotationAngle;
-            CameraDisplay.transform.localEulerAngles = new Vector3(0, 0, -rotation);
-        }
-    }
-    
-    IEnumerator DetectFacesPeriodically()
-    {
-        while (true)
-        {
-            if (!isDetecting)
-            {
-                isDetecting = true;
-                mlkitManager.DetectFaces();
-            }
+            mlkitManager.SwitchCamera();
             
-            yield return new WaitForSeconds(DetectionInterval);
-            isDetecting = false;
+            // Toggle camera type for logging
+            currentCameraType = (currentCameraType == "Front") ? "Back" : "Front";
+            deviceState.cameraType = currentCameraType;
+            
+            Debug.Log("Switched to " + currentCameraType + " camera");
+        }
+        else
+        {
+            Debug.LogWarning("Cannot switch camera - not initialized yet");
         }
     }
     
     void HandleFaceDetectionResult(string result)
     {
-        FaceDetectionData data = FaceDetectionData.ParseResult(result);
-        
-        if (DebugText != null)
+        lastDetectionData = FaceDetectionData.ParseResult(result);
+    
+        // Update device state for logging
+        deviceState.faceCount = lastDetectionData.faces.Count;
+        if (lastDetectionData.faces.Count > 0)
         {
-            DebugText.text = $"Face Detection: {result}";
-        }
+            deviceState.lastFaceDetectionTime = Time.time;
+            deviceState.hasSmile = lastDetectionData.faces.Exists(face => face.smileProbability > 0.7f);
         
-        if (FaceCountText != null)
-        {
-            FaceCountText.text = $"Faces detected: {data.faces.Count}";
-        }
-        
-        DrawFaceRectangles(data);
-        
-        foreach (var face in data.faces)
-        {
-            if (face.smileProbability > 0.7f)
+            // Update upsetness
+            var mostUpsetFace = lastDetectionData.faces.OrderByDescending(face => face.upsetnessProbability).FirstOrDefault();
+            if (mostUpsetFace != null)
             {
-                Debug.Log("Person is smiling!");
+                deviceState.upsetLevel = mostUpsetFace.upsetnessProbability;
+                deviceState.isUpset = mostUpsetFace.upsetnessProbability > 0.6f; // Threshold for "upset"
             }
         }
+    
+        // Notify UI through event
+        OnFaceDetectionResult?.Invoke(lastDetectionData, result);
     }
     
-    private void DrawFaceRectangles(FaceDetectionData data)
+    // State logging coroutine - runs every LoggingInterval seconds
+    private IEnumerator LogStateRoutine()
     {
-        // Clear existing indicators
-        foreach (GameObject indicator in faceIndicators)
+        while (true)
         {
-            Destroy(indicator);
-        }
-        faceIndicators.Clear();
-        
-        if (mlkitManager.WebCamTexture == null || !mlkitManager.WebCamTexture.isPlaying)
-            return;
-        
-        // Get camera dimensions
-        float camWidth = mlkitManager.WebCamTexture.width;
-        float camHeight = mlkitManager.WebCamTexture.height;
-        
-        // Get display dimensions
-        RectTransform displayRect = CameraDisplay.GetComponent<RectTransform>();
-        float displayWidth = displayRect.rect.width;
-        float displayHeight = displayRect.rect.height;
-        
-        // Calculate scale factors
-        float scaleX = displayWidth / camWidth;
-        float scaleY = displayHeight / camHeight;
-        
-        foreach (var face in data.faces)
-        {
-            // Create rectangle GameObject
-            GameObject rectangle = new GameObject("FaceIndicator");
-            rectangle.transform.SetParent(CameraDisplay.transform);
+            // Wait for the specified interval
+            yield return new WaitForSeconds(LoggingInterval);
             
-            // Add Image component for the rectangle
-            UnityEngine.UI.Image image = rectangle.AddComponent<UnityEngine.UI.Image>();
-            image.color = new Color(0, 1, 0, 0.3f); // Semi-transparent green
+            // Update additional state information
+            deviceState.fps = (int)(1.0f / Time.deltaTime);
+            deviceState.memoryUsage = System.GC.GetTotalMemory(false) / (1024 * 1024); // MB
+            deviceState.timeSinceLastFace = Time.time - deviceState.lastFaceDetectionTime;
+            deviceState.timestamp = System.DateTime.Now.ToString("HH:mm:ss");
             
-            // Set rectangle position and size
-            RectTransform rectTransform = rectangle.GetComponent<RectTransform>();
+            // Log state to console
+            string stateLog = $"[STATE LOG] {deviceState.timestamp}\n" +
+                              $"Camera: {deviceState.cameraType} ({deviceState.cameraStatus})\n" +
+                              $"FPS: {deviceState.fps}\n" +
+                              $"Memory: {deviceState.memoryUsage}MB\n" +
+                              $"Faces: {deviceState.faceCount}\n" +
+                              $"Smile Detected: {deviceState.hasSmile}\n" +
+                              $"Time Since Face: {deviceState.timeSinceLastFace:F1}s";
             
-            // Convert face bounds to screen coordinates
-            float x = face.bounds.x * scaleX;
-            float y = face.bounds.y * scaleY;
-            float width = face.bounds.width * scaleX;
-            float height = face.bounds.height * scaleY;
+            Debug.Log(stateLog);
             
-            // Apply to rectangle
-            rectTransform.anchorMin = new Vector2(0, 1); // Top-left anchor
-            rectTransform.anchorMax = new Vector2(0, 1);
-            rectTransform.pivot = new Vector2(0, 1);
-            
-            // Position correctly (convert from ML Kit coordinates)
-            rectTransform.anchoredPosition = new Vector2(x, -y); // Negative Y for UI coordinates
-            rectTransform.sizeDelta = new Vector2(width, height);
-            
-            // Add visual feedback for smile detection
-            if (face.smileProbability > 0.7f)
-            {
-                GameObject smileIndicator = new GameObject("SmileIndicator");
-                smileIndicator.transform.SetParent(rectangle.transform);
-                
-                TextMeshProUGUI smileText = smileIndicator.AddComponent<TextMeshProUGUI>();
-                smileText.text = "😊"; // Or use "SMILE!"
-                smileText.fontSize = 24;
-                smileText.color = Color.green;
-                smileText.alignment = TextAlignmentOptions.Center;
-                
-                RectTransform smileTransform = smileIndicator.GetComponent<RectTransform>();
-                smileTransform.anchorMin = Vector2.zero;
-                smileTransform.anchorMax = Vector2.one;
-                smileTransform.offsetMin = Vector2.zero;
-                smileTransform.offsetMax = Vector2.zero;
-            }
-            
-            faceIndicators.Add(rectangle);
+            // Notify UI through event
+            OnStateLogUpdated?.Invoke(deviceState);
         }
     }
     
@@ -203,6 +170,24 @@ public class FaceDetectionGameController : MonoBehaviour
         if (mlkitManager != null)
         {
             mlkitManager.OnFaceDetectionComplete -= HandleFaceDetectionResult;
+            mlkitManager.OnCameraInitializedComplete -= HandleCameraInitialized;
         }
+    }
+    
+    // Class to track device and detection state
+    [System.Serializable]
+    public class DeviceState
+    {
+        public string timestamp = "";
+        public string cameraType = "Front";
+        public string cameraStatus = "Initializing";
+        public int faceCount = 0;
+        public bool hasSmile = false;
+        public bool isUpset = false;  // New property
+        public float upsetLevel = 0f; // New property
+        public float lastFaceDetectionTime = 0f;
+        public float timeSinceLastFace = 0f;
+        public int fps = 0;
+        public long memoryUsage = 0; // in MB
     }
 }

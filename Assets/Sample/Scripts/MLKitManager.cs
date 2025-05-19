@@ -7,14 +7,16 @@ public class MLKitManager : MonoBehaviour
     public delegate void FaceDetectionResult(string result);
     public event FaceDetectionResult OnFaceDetectionComplete;
     
-    private WebCamTexture webCamTexture;
-    private Color32[] pixels;
-    private byte[] imageBytes;
+    public delegate void CameraInitializedResult(string result);
+    public event CameraInitializedResult OnCameraInitializedComplete;
     
-    public WebCamTexture WebCamTexture => webCamTexture;
+    // Reference texture to display the camera in Unity
+    private Texture2D displayTexture;
+    public Texture2D DisplayTexture => displayTexture;
     
     void Awake()
     {
+        gameObject.name = "MLKitManager";
         Application.targetFrameRate = 60;
         if (Instance == null)
         {
@@ -29,115 +31,96 @@ public class MLKitManager : MonoBehaviour
     
     void Start()
     {
+        Debug.Log("MLKitManager Start called");
         InitializeMLKit();
     }
-    
+
     void InitializeMLKit()
     {
-        #if UNITY_ANDROID && !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try {
+            Debug.Log("Attempting to initialize ML Kit on Android");
             AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
             
+            Debug.Log("Looking for UnityMLKitBridge class");
             AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            Debug.Log("Found UnityMLKitBridge class, calling initialize");
             bridgeClass.CallStatic("initialize");
-        #else
-            Debug.Log("ML Kit only works on Android devices");
-        #endif
+            Debug.Log("ML Kit initialization called");
+        }
+        catch (System.Exception e) {
+            Debug.LogError("Failed to initialize ML Kit: " + e.Message + "\n" + e.StackTrace);
+        }
+#else
+        Debug.Log("ML Kit only works on Android devices");
+#endif
     }
     
     public void StartCamera()
     {
-        WebCamDevice[] devices = WebCamTexture.devices;
-        
-        if (devices.Length > 0)
-        {
-            string deviceName = devices[0].name; // Default to first camera
-            WebCamDevice selectedDevice = devices[0];
-        
-            // Find front-facing camera
-            for (int i = 0; i < devices.Length; i++)
-            {
-                var webCamDevice = devices[i];
-                if (webCamDevice.isFrontFacing)
-                {
-                    selectedDevice = webCamDevice;
-                    deviceName = webCamDevice.name;
-                    Debug.Log("Found front camera: " + deviceName);
-                    break;
-                }
-            }
-
-            var selectedDeviceAvailableResolution = selectedDevice.availableResolutions[0];
-            int requestedWidth = selectedDeviceAvailableResolution.width;
-            int requestedHeight = selectedDeviceAvailableResolution.height;
-            
-            webCamTexture = new WebCamTexture(deviceName, requestedWidth, requestedHeight);
-            webCamTexture.Play();
-        }
-        else
-        {
-            Debug.LogError("No camera devices found!");
-        }
-    }
-    
-    public void DetectFaces()
-    {
-        if (webCamTexture == null || !webCamTexture.isPlaying)
-        {
-            Debug.LogWarning("Camera not initialized");
-            return;
-        }
-        
         #if UNITY_ANDROID && !UNITY_EDITOR
-            pixels = webCamTexture.GetPixels32();
-            imageBytes = EncodeToYUV420(pixels, webCamTexture.width, webCamTexture.height);
-            
             AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
-            bridgeClass.CallStatic("detectFaces", imageBytes, webCamTexture.width, webCamTexture.height);
+            bridgeClass.CallStatic("startCamera");
         #else
-            Debug.Log("Face detection only works on Android devices");
+            Debug.Log("Camera only starts on Android devices");
+            // For testing in editor
+            OnCameraInitialized("SUCCESS");
         #endif
     }
     
+    public void SwitchCamera()
+    {
+        #if UNITY_ANDROID && !UNITY_EDITOR
+            AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            bridgeClass.CallStatic("switchCamera");
+        #else
+            Debug.Log("Camera switching only works on Android devices");
+        #endif
+    }
+    
+    public void SetDetectionInterval(int interval)
+    {
+        #if UNITY_ANDROID && !UNITY_EDITOR
+            AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            bridgeClass.CallStatic("setDetectionInterval", interval);
+        #else
+            Debug.Log("Setting detection interval only works on Android devices");
+        #endif
+    }
+    
+    public void StopCamera()
+    {
+        #if UNITY_ANDROID && !UNITY_EDITOR
+            AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            bridgeClass.CallStatic("stopCamera");
+        #else
+            Debug.Log("Camera stopping only works on Android devices");
+        #endif
+    }
+    
+    // Called from Android when initialization is complete
     public void OnInitialized(string result)
     {
         Debug.Log("ML Kit Initialized: " + result);
     }
     
+    // Called from Android when camera is initialized
+    public void OnCameraInitialized(string result)
+    {
+        Debug.Log("Camera Initialized: " + result);
+        OnCameraInitializedComplete?.Invoke(result);
+    }
+    
+    // Called from Android when face detection is complete
     public void OnFaceDetectionResult(string result)
     {
         Debug.Log("Face Detection Result: " + result);
         OnFaceDetectionComplete?.Invoke(result);
     }
     
-    private byte[] EncodeToYUV420(Color32[] colors, int width, int height)
+    void OnDestroy()
     {
-        byte[] yuv = new byte[width * height * 3 / 2];
-        int frameSize = width * height;
-        
-        for (int i = 0; i < colors.Length; i++)
-        {
-            int r = colors[i].r;
-            int g = colors[i].g;
-            int b = colors[i].b;
-            
-            int y = ((66 * r + 129 * g + 25 * b + 128) >> 8) + 16;
-            int u = ((-38 * r - 74 * g + 112 * b + 128) >> 8) + 128;
-            int v = ((112 * r - 94 * g - 18 * b + 128) >> 8) + 128;
-            
-            yuv[i] = (byte)Mathf.Clamp(y, 0, 255);
-            
-            if (i % 2 == 0)
-            {
-                int uvIndex = frameSize + (i / 2);
-                if (uvIndex < yuv.Length - 1)
-                {
-                    yuv[uvIndex] = (byte)Mathf.Clamp(u, 0, 255);
-                    yuv[uvIndex + 1] = (byte)Mathf.Clamp(v, 0, 255);
-                }
-            }
-        }
-        
-        return yuv;
+        StopCamera();
     }
 }
