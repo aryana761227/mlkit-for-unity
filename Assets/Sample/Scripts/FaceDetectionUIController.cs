@@ -134,7 +134,23 @@ public class FaceDetectionUIController : MonoBehaviour
 
             // Add Image component for the rectangle
             UnityEngine.UI.Image image = rectangle.AddComponent<UnityEngine.UI.Image>();
-            image.color = faceRectangleColor;
+
+            // Change color based on upsetness level
+            if (face.upsetnessProbability > 0.6f)
+            {
+                // Red for upset
+                image.color = new Color(1, 0, 0, 0.3f);
+            }
+            else if (face.smileProbability > 0.7f)
+            {
+                // Green for smile
+                image.color = new Color(0, 1, 0, 0.3f);
+            }
+            else
+            {
+                // Default color
+                image.color = new Color(0, 0.7f, 1, 0.3f);
+            }
 
             // Set rectangle position and size
             RectTransform rectTransform = rectangle.GetComponent<RectTransform>();
@@ -154,16 +170,37 @@ public class FaceDetectionUIController : MonoBehaviour
             rectTransform.anchoredPosition = new Vector2(x * displayWidth, -y * displayHeight);
             rectTransform.sizeDelta = new Vector2(width * displayWidth, height * displayHeight);
 
-            // Add visual feedback for smile detection
-            if (face.smileProbability > 0.7f)
+            // Add visual feedback based on face state
+            if (face.upsetnessProbability > 0.6f)
             {
+                // Add upset indicator
+                GameObject upsetIndicator = new GameObject("UpsetIndicator");
+                upsetIndicator.transform.SetParent(rectangle.transform);
+
+                TextMeshProUGUI upsetText = upsetIndicator.AddComponent<TextMeshProUGUI>();
+                upsetText.text = "😠"; // Upset emoji
+                upsetText.fontSize = 24;
+                upsetText.color = Color.red;
+                upsetText.alignment = TextAlignmentOptions.Center;
+
+                RectTransform upsetTransform = upsetIndicator.GetComponent<RectTransform>();
+                upsetTransform.anchorMin = Vector2.zero;
+                upsetTransform.anchorMax = Vector2.one;
+                upsetTransform.offsetMin = Vector2.zero;
+                upsetTransform.offsetMax = Vector2.zero;
+
+                faceIndicators.Add(upsetIndicator);
+            }
+            else if (face.smileProbability > 0.7f)
+            {
+                // Add smile indicator
                 GameObject smileIndicator = new GameObject("SmileIndicator");
                 smileIndicator.transform.SetParent(rectangle.transform);
 
                 TextMeshProUGUI smileText = smileIndicator.AddComponent<TextMeshProUGUI>();
-                smileText.text = "😊"; // Or use "SMILE!"
-                smileText.fontSize = smileIndicatorFontSize;
-                smileText.color = smileIndicatorColor;
+                smileText.text = "😊"; // Smile emoji
+                smileText.fontSize = 24;
+                smileText.color = Color.green;
                 smileText.alignment = TextAlignmentOptions.Center;
 
                 RectTransform smileTransform = smileIndicator.GetComponent<RectTransform>();
@@ -171,6 +208,8 @@ public class FaceDetectionUIController : MonoBehaviour
                 smileTransform.anchorMax = Vector2.one;
                 smileTransform.offsetMin = Vector2.zero;
                 smileTransform.offsetMax = Vector2.zero;
+
+                faceIndicators.Add(smileIndicator);
             }
 
             faceIndicators.Add(rectangle);

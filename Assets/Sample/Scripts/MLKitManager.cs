@@ -59,14 +59,24 @@ public class MLKitManager : MonoBehaviour
     
     public void StartCamera()
     {
-        #if UNITY_ANDROID && !UNITY_EDITOR
+        Debug.Log("MLKitManager.StartCamera called");
+    
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try {
+            Debug.Log("Attempting to call Android startCamera");
             AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            Debug.Log("Got UnityMLKitBridge class, calling startCamera");
             bridgeClass.CallStatic("startCamera");
-        #else
-            Debug.Log("Camera only starts on Android devices");
-            // For testing in editor
-            OnCameraInitialized("SUCCESS");
-        #endif
+            Debug.Log("Android startCamera method called");
+        }
+        catch (System.Exception e) {
+            Debug.LogError("Failed to call startCamera: " + e.Message + "\n" + e.StackTrace);
+        }
+#else
+        Debug.Log("Camera only starts on Android devices");
+        // For testing in editor
+        OnCameraInitialized("SUCCESS");
+#endif
     }
     
     public void SwitchCamera()
