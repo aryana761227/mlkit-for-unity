@@ -499,6 +499,7 @@ MonoBehaviour:
   uiController: {fileID: 1829583000}
   enableLogging: 1
   logInterval: 2
+  logger: {fileID: 0}
 --- !u!114 &1783182968
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -574,7 +575,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 559440620986839216, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
       propertyPath: m_Name
-      value: FaceVisualizer
+      value: FaceLogger
       objectReference: {fileID: 0}
     - target: {fileID: 559440620986839218, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
       propertyPath: canvas
