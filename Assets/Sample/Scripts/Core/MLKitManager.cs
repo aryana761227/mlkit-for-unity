@@ -14,10 +14,17 @@ public class MLKitManager : MonoBehaviour
     private Texture2D displayTexture;
     public Texture2D DisplayTexture => displayTexture;
     
+    // Face detection configuration
+    [Header("Detection Settings")]
+    [Tooltip("Whether to detect facial landmarks (eyes, nose, ears, etc.)")]
+    public bool enableLandmarks = true;
+    
+    [Tooltip("Whether to detect facial contours (face outline, lips, eyebrows, etc.)")]
+    public bool enableContours = true;
+    
     void Awake()
     {
         gameObject.name = "MLKitManager";
-        Application.targetFrameRate = 60;
         if (Instance == null)
         {
             Instance = this;
@@ -68,6 +75,9 @@ public class MLKitManager : MonoBehaviour
             Debug.Log("Got UnityMLKitBridge class, calling startCamera");
             bridgeClass.CallStatic("startCamera");
             Debug.Log("Android startCamera method called");
+            
+            // Configure detection features
+            ConfigureFaceDetection(enableLandmarks, enableContours);
         }
         catch (System.Exception e) {
             Debug.LogError("Failed to call startCamera: " + e.Message + "\n" + e.StackTrace);
@@ -76,6 +86,26 @@ public class MLKitManager : MonoBehaviour
         Debug.Log("Camera only starts on Android devices");
         // For testing in editor
         OnCameraInitialized("SUCCESS");
+#endif
+    }
+    
+    // New method to configure face detection options
+    public void ConfigureFaceDetection(bool enableLandmarks, bool enableContours)
+    {
+        this.enableLandmarks = enableLandmarks;
+        this.enableContours = enableContours;
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try {
+            AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            bridgeClass.CallStatic("configureFaceDetection", enableLandmarks, enableContours);
+            Debug.Log($"Configured face detection - landmarks: {enableLandmarks}, contours: {enableContours}");
+        }
+        catch (System.Exception e) {
+            Debug.LogError("Failed to configure face detection: " + e.Message + "\n" + e.StackTrace);
+        }
+#else
+        Debug.Log($"Face detection configuration (landmarks: {enableLandmarks}, contours: {enableContours}) only works on Android devices");
 #endif
     }
     
