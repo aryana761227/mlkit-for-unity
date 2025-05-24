@@ -140,7 +140,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &61212936
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -768,13 +768,29 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 61212939}
     m_Modifications:
+    - target: {fileID: 559440619887812058, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 559440619918983418, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 559440620555510097, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 559440620938882701, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 559440620986839216, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
       propertyPath: m_Name
       value: FaceLogger
       objectReference: {fileID: 0}
     - target: {fileID: 559440620986839216, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 559440620986839218, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
       propertyPath: canvas
@@ -872,6 +888,14 @@ PrefabInstance:
       propertyPath: mlkitManager
       value: 
       objectReference: {fileID: 1829583003}
+    - target: {fileID: 559440621128139474, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 836694089381847062, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 559440620986839228, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
     - {fileID: 559440620986839229, guid: ae3989f096608ad47bfc6eb666491d02, type: 3}
@@ -1004,7 +1028,5 @@ PrefabInstance:
       propertyPath: switchCameraButton
       value: 
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 6268443364914153645, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
-    - {fileID: 6268443364914153644, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
