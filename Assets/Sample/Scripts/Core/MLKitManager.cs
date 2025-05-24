@@ -22,9 +22,14 @@ public class MLKitManager : MonoBehaviour
     [Tooltip("Whether to detect facial contours (face outline, lips, eyebrows, etc.)")]
     public bool enableContours = true;
     
+    // Permission handling
+    private bool isInitialized = false;
+    private bool pendingCameraStart = false;
+    
     void Awake()
     {
         gameObject.name = "MLKitManager";
+        Application.targetFrameRate = 60;
         if (Instance == null)
         {
             Instance = this;
@@ -61,12 +66,21 @@ public class MLKitManager : MonoBehaviour
         }
 #else
         Debug.Log("ML Kit only works on Android devices");
+        // For testing in editor
+        OnInitialized("SUCCESS");
 #endif
     }
     
     public void StartCamera()
     {
         Debug.Log("MLKitManager.StartCamera called");
+        
+        if (!isInitialized)
+        {
+            Debug.Log("ML Kit not initialized yet, marking camera start as pending");
+            pendingCameraStart = true;
+            return;
+        }
     
 #if UNITY_ANDROID && !UNITY_EDITOR
         try {
@@ -143,6 +157,15 @@ public class MLKitManager : MonoBehaviour
     public void OnInitialized(string result)
     {
         Debug.Log("ML Kit Initialized: " + result);
+        isInitialized = result.Contains("SUCCESS");
+        
+        // If we had a pending camera start, do it now
+        if (isInitialized && pendingCameraStart)
+        {
+            pendingCameraStart = false;
+            Debug.Log("Starting camera after initialization completed");
+            StartCamera();
+        }
     }
     
     // Called from Android when camera is initialized
@@ -157,6 +180,16 @@ public class MLKitManager : MonoBehaviour
     {
         Debug.Log("Face Detection Result: " + result);
         OnFaceDetectionComplete?.Invoke(result);
+    }
+    
+    // Handle permission results from Android
+    void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus)
+        {
+            Debug.Log("Application gained focus, checking if camera should be restarted");
+            // You might want to restart camera here if needed
+        }
     }
     
     void OnDestroy()
