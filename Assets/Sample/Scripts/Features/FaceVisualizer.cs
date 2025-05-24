@@ -22,11 +22,14 @@ public class FaceVisualizer : MonoBehaviour
         if (gameController == null || gameController.LastDetectionData == null)
             return;
 
+        Debug.Log("FaceVisualizer s 1");
         var firstFace = gameController.LastDetectionData.faces.First();
         if (firstFace == null)
             return;
+        Debug.Log("FaceVisualizer s 2");
         if (!initialized)
         {
+            Debug.Log("FaceVisualizer s 3");
             initialized = true;
             landmarkInstances = new Transform[firstFace.landmarks.Count];
             contourInstances = new Transform[firstFace.contours.Count];
@@ -48,6 +51,7 @@ public class FaceVisualizer : MonoBehaviour
         if (faceData.landmarks != null)
         {
 
+            Debug.Log("FaceVisualizer s 4");
             int index = 0;
             foreach (var landmarkPos in faceData.landmarks.Values)
             {
@@ -63,6 +67,7 @@ public class FaceVisualizer : MonoBehaviour
         // Draw contours
         if (faceData.contours != null)
         {
+            Debug.Log("FaceVisualizer s 5");
             foreach (var contour in faceData.contours)
             {
                 var index = 0;

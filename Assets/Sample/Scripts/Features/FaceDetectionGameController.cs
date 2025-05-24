@@ -66,6 +66,7 @@ public class FaceDetectionGameController : MonoBehaviour
     
     void StartCamera()
     {
+        Debug.Log("MLKitManager.StartCamera called");
         mlkitManager.StartCamera();
         
         // Set detection interval (frames to skip)
