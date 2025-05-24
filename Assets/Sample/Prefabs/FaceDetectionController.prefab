@@ -52,6 +52,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d770f84e0b9d3d48baa9b75a92cc4f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enableLandmarks: 1
+  enableContours: 1
 --- !u!114 &6268443364914153645
 MonoBehaviour:
   m_ObjectHideFlags: 0
