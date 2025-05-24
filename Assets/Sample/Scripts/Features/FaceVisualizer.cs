@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,36 +11,39 @@ public class FaceVisualizer : MonoBehaviour
     [SerializeField] public FaceDetectionGameController gameController;
     [SerializeField] public GameObject landMarkPrefab;
     [SerializeField] public GameObject contourPrefab;
-
-    private Transform[] landmarkInstances;
-    private Transform[] contourInstances;
+    [SerializeField] private float multiplier;
+    
+    private List<Transform> landmarkInstances;
+    private List<Transform> contourInstances;
 
     private bool initialized = false;
 
     void Update()
     {
-
         if (gameController == null || gameController.LastDetectionData == null)
             return;
-
-        Debug.Log("FaceVisualizer s 1");
+        if (gameController.LastDetectionData.faces == null || gameController.LastDetectionData.faces.Count == 0)
+        {
+            return;
+        }
         var firstFace = gameController.LastDetectionData.faces.First();
         if (firstFace == null)
             return;
-        Debug.Log("FaceVisualizer s 2");
         if (!initialized)
         {
-            Debug.Log("FaceVisualizer s 3");
             initialized = true;
-            landmarkInstances = new Transform[firstFace.landmarks.Count];
-            contourInstances = new Transform[firstFace.contours.Count];
+            landmarkInstances = new List<Transform>();
+            contourInstances = new List<Transform>();
             for (int i = 0; i < firstFace.landmarks.Count; i++)
             {
-                landmarkInstances[i] = Instantiate(landMarkPrefab).transform;
+                landmarkInstances.Add(Instantiate(landMarkPrefab, transform).transform);
             }
-            for (int i = 0; i < firstFace.contours.Count; i++)
-            {
-                contourInstances[i] = Instantiate(contourPrefab).transform;
+            foreach (var (_, vector2s) in firstFace.contours)
+            {   
+                foreach (var _ in vector2s)
+                {
+                    contourInstances.Add(Instantiate(contourPrefab, transform).transform);
+                }
             }
         }
         DrawFace(firstFace);
@@ -47,39 +51,21 @@ public class FaceVisualizer : MonoBehaviour
 
     void DrawFace(FaceData faceData)
     {
-        // Draw landmarks
-        if (faceData.landmarks != null)
+        int index = 0;
+        foreach (var landmarkPos in faceData.landmarks.Values)
         {
-
-            Debug.Log("FaceVisualizer s 4");
-            int index = 0;
-            foreach (var landmarkPos in faceData.landmarks.Values)
-            {
-                if (index >= 0 && index < landmarkInstances.Length)
-                {
-                    landmarkInstances[index].position = new Vector3(landmarkPos.x, landmarkPos.y, 0);
-                    landmarkInstances[index].gameObject.SetActive(true);
-                }
-                index++;
-            }
+            landmarkInstances[index].position = new Vector3(-landmarkPos.x * multiplier, -landmarkPos.y * multiplier, 0);
+            landmarkInstances[index].gameObject.SetActive(true);
+            index++;
         }
-
-        // Draw contours
-        if (faceData.contours != null)
+        index = 0;
+        foreach (var contour in faceData.contours)
         {
-            Debug.Log("FaceVisualizer s 5");
-            foreach (var contour in faceData.contours)
+            foreach (var vector2 in contour.Value)
             {
-                var index = 0;
-                foreach (var contourPos in contour.Value)
-                {
-                    if (index >= 0 && index < contourInstances.Length)
-                    {
-                        contourInstances[index].position = new Vector3(contourPos.x, contourPos.y, 0);
-                        contourInstances[index].gameObject.SetActive(true);
-                    }
-                    index++;
-                }
+                contourInstances[index].position = new Vector3(-vector2.x * multiplier, -vector2.y * multiplier, 0);
+                contourInstances[index].gameObject.SetActive(true);
+                index++;
             }
         }
     }

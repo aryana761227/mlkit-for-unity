@@ -40,7 +40,7 @@ public class CameraController : MonoBehaviour
             else if (touch.phase == TouchPhase.Moved)
             {
                 Vector3 touchDelta = touch.deltaPosition;
-                Vector3 move = new Vector3(-touchDelta.x * dragSpeed, 0, -touchDelta.y * dragSpeed);
+                Vector3 move = new Vector3(-touchDelta.x * dragSpeed, -touchDelta.y * dragSpeed, 0);
                 transform.Translate(move, Space.World);
             }
         }

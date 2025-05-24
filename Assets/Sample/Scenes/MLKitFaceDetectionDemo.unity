@@ -301,8 +301,8 @@ Transform:
   m_GameObject: {fileID: 630466918}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.43431, y: 0.43431, z: 0.43431}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.002, y: 0.002, z: 0.002}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 644457188}
   m_RootOrder: 0
@@ -339,6 +339,7 @@ MonoBehaviour:
   gameController: {fileID: 1829583001}
   landMarkPrefab: {fileID: 630466918}
   contourPrefab: {fileID: 1833426591}
+  multiplier: 3
 --- !u!4 &644457188
 Transform:
   m_ObjectHideFlags: 0
@@ -347,9 +348,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 644457186}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0, y: 100, z: 0}
+  m_LocalScale: {x: 10, y: 10, z: 10}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 630466921}
   - {fileID: 1833426594}
@@ -503,7 +504,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
+  orthographic: 1
   orthographic size: 5
   m_Depth: -1
   m_CullingMask:
@@ -659,12 +660,7 @@ MonoBehaviour:
   logDetectionResults: 1
   logLandmarks: 1
   logContours: 1
-  logInterval: 1
---- !u!224 &1829582999 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 6268443364914153632, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
-  m_PrefabInstance: {fileID: 6268443364192022583}
-  m_PrefabAsset: {fileID: 0}
+  logInterval: 100
 --- !u!114 &1829583001 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6268443364914153646, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
@@ -764,8 +760,8 @@ Transform:
   m_GameObject: {fileID: 1833426591}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.43431, y: 0.43431, z: 0.43431}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.002, y: 0.002, z: 0.002}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 644457188}
   m_RootOrder: 1
@@ -1016,6 +1012,18 @@ PrefabInstance:
     - target: {fileID: 6268443364914153633, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
       propertyPath: m_Name
       value: MLKitManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 6268443364914153646, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
+      propertyPath: LoggingInterval
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 6268443364914153646, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
+      propertyPath: DetectionInterval
+      value: 0.02
+      objectReference: {fileID: 0}
+    - target: {fileID: 6268443364914153646, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
+      propertyPath: EnableStateLogging
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 033df9810d9cdd1419ddcd4685c36ec4, type: 3}
