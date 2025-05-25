@@ -96,7 +96,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &559440619887812069
 RectTransform:
   m_ObjectHideFlags: 0
@@ -184,7 +184,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &559440619918983301
 RectTransform:
   m_ObjectHideFlags: 0
@@ -474,7 +474,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &559440620555510096
 RectTransform:
   m_ObjectHideFlags: 0
@@ -873,7 +873,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &559440620938882700
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1062,11 +1062,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 559440620986839219}
-  - component: {fileID: 559440620986839228}
-  - component: {fileID: 559440620986839229}
-  - component: {fileID: 559440620986839218}
+  - component: {fileID: 1783182967}
+  - component: {fileID: 1783182968}
   m_Layer: 5
-  m_Name: FaceVisualizer
+  m_Name: FaceLogger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1098,51 +1097,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1080, y: 2400}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &559440620986839228
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 559440620986839216}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b7e1f55dca64f309fd328d97a95281c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameController: {fileID: 0}
-  cameraDisplay: {fileID: 836694089381847060}
-  landmarkColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  landmarkSize: 5
-  showLandmarks: 1
-  contourColor: {r: 0, g: 1, b: 0, a: 1}
-  contourLineWidth: 2
-  showContours: 1
-  showLandmarkLabels: 0
-  labelColor: {r: 1, g: 1, b: 1, a: 1}
-  labelFontSize: 12
---- !u!114 &559440620986839229
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 559440620986839216}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8e0ad9340dbb4fa88bf758b0b96cd013, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mlkitManager: {fileID: 0}
-  landmarkVisualizer: {fileID: 559440620986839228}
-  landmarksToggle: {fileID: 559440620555510099}
-  contoursToggle: {fileID: 559440619887812068}
-  labelsToggle: {fileID: 559440621128139484}
-  statsText: {fileID: 0}
-  resetButton: {fileID: 559440620938882703}
-  showStats: 1
-  statsUpdateInterval: 0.5
---- !u!114 &559440620986839218
+--- !u!114 &1783182967
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1157,7 +1112,24 @@ MonoBehaviour:
   autoSetup: 1
   createDemoUI: 1
   canvas: {fileID: 0}
-  cameraDisplay: {fileID: 836694089381847060}
+  cameraDisplay: {fileID: 0}
+--- !u!114 &1783182968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 559440620986839216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bae211c29e7483481d171d1e04fcc0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameController: {fileID: 0}
+  logDetectionResults: 0
+  logLandmarks: 0
+  logContours: 0
+  logInterval: 5
 --- !u!1 &559440621083531792
 GameObject:
   m_ObjectHideFlags: 0
@@ -1386,7 +1358,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &559440621128139485
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1474,7 +1446,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &836694089381847061
 RectTransform:
   m_ObjectHideFlags: 0
