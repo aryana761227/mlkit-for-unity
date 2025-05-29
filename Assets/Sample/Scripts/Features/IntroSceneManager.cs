@@ -7,7 +7,7 @@ using Sample.Scripts.Core.Utility;
 /// </summary>
 public class IntroSceneManager : MonoBehaviour
 {
-    private const string SampleScenesMlkitFaceDetectionDemo = "Sample/Scenes/MLKitFaceDetectionDemo";
+    private const string SampleScenesMlkitFaceDetectionDemo = "Sample/Scenes/MLKitFaceMeshDetectionDemo";
     [Tooltip("Delay before requesting permission (in seconds)")]
     public float requestDelay = 1f;
     
