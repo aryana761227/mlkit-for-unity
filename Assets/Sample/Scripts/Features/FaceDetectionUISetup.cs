@@ -68,6 +68,7 @@ public class FaceDetectionUISetup : MonoBehaviour
     
     void SetupUI()
     {
+        return;
         // Create a background panel
         GameObject panelGO = CreateUIElement("Background Panel", canvas.transform);
         Image panelImage = panelGO.AddComponent<Image>();

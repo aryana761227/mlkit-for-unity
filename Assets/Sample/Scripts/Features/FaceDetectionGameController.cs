@@ -66,11 +66,12 @@ public class FaceDetectionGameController : MonoBehaviour
     
     void StartCamera()
     {
+        Debug.Log("MLKitManager.StartCamera called");
         mlkitManager.StartCamera();
         
         // Set detection interval (frames to skip)
         // Higher values = better performance but less smooth detection
-        int interval = Mathf.RoundToInt(DetectionInterval * 30); // Assuming 30fps
+        int interval = Mathf.RoundToInt(DetectionInterval * 60); // Assuming 30fps
         mlkitManager.SetDetectionInterval(Mathf.Max(1, interval));
     }
     
