@@ -25,7 +25,10 @@ public class MLKitManager : MonoBehaviour
     // Permission handling
     private bool isInitialized = false;
     private bool pendingCameraStart = false;
-    
+    private bool faceMeshTrianglesDetector = false;
+    private bool lightWeightFaceDetector;
+    private bool faceMeshPointsDetector;
+
     void Awake()
     {
         gameObject.name = "MLKitManager";
@@ -74,7 +77,6 @@ public class MLKitManager : MonoBehaviour
     public void StartCamera()
     {
         Debug.Log("MLKitManager.StartCamera called");
-        
         if (!isInitialized)
         {
             Debug.Log("ML Kit not initialized yet, marking camera start as pending");
@@ -89,7 +91,6 @@ public class MLKitManager : MonoBehaviour
             Debug.Log("Got UnityMLKitBridge class, calling startCamera");
             bridgeClass.CallStatic("startCamera");
             Debug.Log("Android startCamera method called");
-            
             // Configure detection features
             ConfigureFaceDetection(enableLandmarks, enableContours);
         }
@@ -102,7 +103,39 @@ public class MLKitManager : MonoBehaviour
         OnCameraInitialized("SUCCESS");
 #endif
     }
-    
+
+    public void EnableLightWeightFaceDetector(bool enable)
+    {
+        this.lightWeightFaceDetector = enable;
+        ApplyFaceDetectionLevelsToAndroid();
+    }
+    public void EnableFaceMeshPointsDetector(bool enable)
+    {
+        this.faceMeshPointsDetector = enable;
+        ApplyFaceDetectionLevelsToAndroid();
+    }
+    public void EnableFaceMeshTrianglesDetector(bool enable)
+    {
+        this.faceMeshTrianglesDetector = enable;
+        ApplyFaceDetectionLevelsToAndroid();
+    }
+
+    private void ApplyFaceDetectionLevelsToAndroid()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try {
+            AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            bridgeClass.CallStatic("setFaceActivations", lightWeightFaceDetector, faceMeshPointsDetector, faceMeshTrianglesDetector);
+            Debug.Log($"Configured face detection - lightWeightFaceDetector: {lightWeightFaceDetector}, faceMeshPointsDetector: {faceMeshPointsDetector}, faceMeshTrianglesDetector : {faceMeshTrianglesDetector}");
+        }
+        catch (System.Exception e) {
+            Debug.LogError("Failed to face detection levels: " + e.Message + "\n" + e.StackTrace);
+        }
+#else
+        Debug.Log($"Face detection level - lightWeightFaceDetector: {lightWeightFaceDetector}, faceMeshPointsDetector: {faceMeshPointsDetector}, faceMeshTrianglesDetector : {faceMeshTrianglesDetector} only works on Android devices");
+#endif
+    }
+
     // New method to configure face detection options
     public void ConfigureFaceDetection(bool enableLandmarks, bool enableContours)
     {
