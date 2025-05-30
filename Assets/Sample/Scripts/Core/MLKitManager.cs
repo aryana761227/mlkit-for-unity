@@ -6,6 +6,10 @@ public class MLKitManager : MonoBehaviour
     
     public delegate void FaceDetectionResult(string result);
     public event FaceDetectionResult OnFaceDetectionComplete;
+    public delegate void FaceMeshPointsDetectionResult(string result);
+    public event FaceMeshPointsDetectionResult OnFaceMeshPointsDetectionComplete;
+    public delegate void FaceMeshTrianglesDetectionResult(string result);
+    public event FaceMeshTrianglesDetectionResult OnFaceMeshTrianglesDetectionComplete;
     
     public delegate void CameraInitializedResult(string result);
     public event CameraInitializedResult OnCameraInitializedComplete;
@@ -211,10 +215,19 @@ public class MLKitManager : MonoBehaviour
     // Called from Android when face detection is complete
     public void OnFaceDetectionResult(string result)
     {
-        Debug.Log("Face Detection Result: " + result);
+        Debug.Log("LightWeight Face Detection Result: " + result);
         OnFaceDetectionComplete?.Invoke(result);
     }
-    
+    public void OnFaceMeshPointsDetectionResult(string result)
+    {
+        Debug.Log("Face Mesh Points Detection Result: " + result);
+        OnFaceMeshPointsDetectionComplete?.Invoke(result);
+    }
+    public void OnFaceMeshTrianglesDetectionResult(string result)
+    {
+        Debug.Log("Face Triangles Points Detection Result: " + result);
+        OnFaceMeshTrianglesDetectionComplete?.Invoke(result);
+    }
     // Handle permission results from Android
     void OnApplicationFocus(bool hasFocus)
     {
