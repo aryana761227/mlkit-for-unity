@@ -11,7 +11,7 @@ namespace Sample.Scripts.Features.Mesh
         private bool initialized = false;
         private MLKitManager mlkitManager;
 
-        private void Start()
+        private void Awake()
         {
             mlkitManager = MLKitManager.Instance;
             if (mlkitManager == null)
@@ -19,19 +19,9 @@ namespace Sample.Scripts.Features.Mesh
                 GameObject mlkitGO = new GameObject("MLKitManager");
                 mlkitManager = mlkitGO.AddComponent<MLKitManager>();
             }
-        
-            // Subscribe to MLKit events
-            mlkitManager.OnCameraInitializedComplete += HandleCameraInitialized;
-            // Start camera
             ConfigureMlkit();
             MLKitManager.Instance.OnFaceMeshPointsDetectionComplete += OnFaceMeshPointsDetectionReceivedFromAndroid;
         }
-
-        private void HandleCameraInitialized(string result)
-        {
-            throw new NotImplementedException();
-        }
-
         private void ConfigureMlkit()
         {
             Debug.Log("MLKitManager.StartCamera called");
@@ -43,15 +33,47 @@ namespace Sample.Scripts.Features.Mesh
 
         private void OnFaceMeshPointsDetectionReceivedFromAndroid(string result)
         {
-            byte[] bytes = Convert.FromBase64String(result);
+            if (string.IsNullOrEmpty(result))
+            {
+                Debug.LogError("Face mesh result string is null or empty.");
+                return;
+            }
+            byte[] bytes;
+            try
+            {
+                bytes = Convert.FromBase64String(result);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Base64 decoding failed: {e.Message}");
+                return;
+            }
+
             using var stream = new MemoryStream(bytes);
             using var reader = new BinaryReader(stream);
+
+            if (bytes.Length < 4)
+            {
+                Debug.LogError("Byte array too small to contain point count.");
+                return;
+            }
+
             int pointCount = reader.ReadInt32();
+
             if (!initialized)
             {
                 Initialize(pointCount);
             }
-            Debug.Log($"Received {pointCount} face mesh points");
+
+            Debug.Log($"[Unity] Received {pointCount} face mesh points");
+
+            int requiredSize = 4 + pointCount * (4 + 4 * 3); // int + index(int) + x/y/z(float)
+            if (bytes.Length < requiredSize)
+            {
+                Debug.LogError($"Expected {requiredSize} bytes but received {bytes.Length}. Aborting.");
+                return;
+            }
+
             for (int i = 0; i < pointCount; i++)
             {
                 int index = reader.ReadInt32();
