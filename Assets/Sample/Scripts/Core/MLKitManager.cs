@@ -4,23 +4,48 @@ public class MLKitManager : MonoBehaviour
 {
     public static MLKitManager Instance { get; private set; }
     
+    // Detection mode enum
+    public enum DetectionMode
+    {
+        FACE_DETECTION,
+        FACE_MESH
+    }
+    
+    [Header("Detection Mode")]
+    public DetectionMode detectionMode = DetectionMode.FACE_DETECTION;
+    
+    // Face detection events
     public delegate void FaceDetectionResult(string result);
     public event FaceDetectionResult OnFaceDetectionComplete;
     
+    // Face mesh events
+    public delegate void FaceMeshResult(string result);
+    public event FaceMeshResult OnFaceMeshComplete;
+    
+    // Camera events
     public delegate void CameraInitializedResult(string result);
     public event CameraInitializedResult OnCameraInitializedComplete;
+    
+    // Mode change event
+    public delegate void DetectionModeChanged(string mode);
+    public event DetectionModeChanged OnDetectionModeChangedComplete;
     
     // Reference texture to display the camera in Unity
     private Texture2D displayTexture;
     public Texture2D DisplayTexture => displayTexture;
     
     // Face detection configuration
-    [Header("Detection Settings")]
+    [Header("Face Detection Settings")]
     [Tooltip("Whether to detect facial landmarks (eyes, nose, ears, etc.)")]
     public bool enableLandmarks = true;
     
     [Tooltip("Whether to detect facial contours (face outline, lips, eyebrows, etc.)")]
     public bool enableContours = true;
+    
+    // Face mesh configuration
+    [Header("Face Mesh Settings")]
+    [Tooltip("Use high accuracy mode for face mesh (468 points vs bounding box only)")]
+    public bool useHighAccuracyMesh = true;
     
     // Permission handling
     private bool isInitialized = false;
@@ -90,8 +115,18 @@ public class MLKitManager : MonoBehaviour
             bridgeClass.CallStatic("startCamera");
             Debug.Log("Android startCamera method called");
             
-            // Configure detection features
-            ConfigureFaceDetection(enableLandmarks, enableContours);
+            // Set the detection mode
+            SetDetectionMode(detectionMode);
+            
+            // Configure based on mode
+            if (detectionMode == DetectionMode.FACE_DETECTION)
+            {
+                ConfigureFaceDetection(enableLandmarks, enableContours);
+            }
+            else
+            {
+                ConfigureFaceMesh(useHighAccuracyMesh);
+            }
         }
         catch (System.Exception e) {
             Debug.LogError("Failed to call startCamera: " + e.Message + "\n" + e.StackTrace);
@@ -103,7 +138,26 @@ public class MLKitManager : MonoBehaviour
 #endif
     }
     
-    // New method to configure face detection options
+    // Set detection mode
+    public void SetDetectionMode(DetectionMode mode)
+    {
+        detectionMode = mode;
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try {
+            AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            bridgeClass.CallStatic("setDetectionMode", mode.ToString());
+            Debug.Log($"Set detection mode to: {mode}");
+        }
+        catch (System.Exception e) {
+            Debug.LogError("Failed to set detection mode: " + e.Message + "\n" + e.StackTrace);
+        }
+#else
+        Debug.Log($"Detection mode set to: {mode} (only works on Android devices)");
+#endif
+    }
+    
+    // Configure face detection options
     public void ConfigureFaceDetection(bool enableLandmarks, bool enableContours)
     {
         this.enableLandmarks = enableLandmarks;
@@ -120,6 +174,25 @@ public class MLKitManager : MonoBehaviour
         }
 #else
         Debug.Log($"Face detection configuration (landmarks: {enableLandmarks}, contours: {enableContours}) only works on Android devices");
+#endif
+    }
+    
+    // Configure face mesh options
+    public void ConfigureFaceMesh(bool useHighAccuracy)
+    {
+        this.useHighAccuracyMesh = useHighAccuracy;
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try {
+            AndroidJavaClass bridgeClass = new AndroidJavaClass("com.medrick.mlkit.UnityMLKitBridge");
+            bridgeClass.CallStatic("configureFaceMesh", useHighAccuracy);
+            Debug.Log($"Configured face mesh - high accuracy: {useHighAccuracy}");
+        }
+        catch (System.Exception e) {
+            Debug.LogError("Failed to configure face mesh: " + e.Message + "\n" + e.StackTrace);
+        }
+#else
+        Debug.Log($"Face mesh configuration (high accuracy: {useHighAccuracy}) only works on Android devices");
 #endif
     }
     
@@ -180,6 +253,20 @@ public class MLKitManager : MonoBehaviour
     {
         Debug.Log("Face Detection Result: " + result);
         OnFaceDetectionComplete?.Invoke(result);
+    }
+    
+    // Called from Android when face mesh detection is complete
+    public void OnFaceMeshResult(string result)
+    {
+        Debug.Log("Face Mesh Result: " + result);
+        OnFaceMeshComplete?.Invoke(result);
+    }
+    
+    // Called from Android when detection mode changes
+    public void OnDetectionModeChanged(string mode)
+    {
+        Debug.Log("Detection Mode Changed: " + mode);
+        OnDetectionModeChangedComplete?.Invoke(mode);
     }
     
     // Handle permission results from Android
