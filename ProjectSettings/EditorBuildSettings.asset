@@ -8,7 +8,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Sample/Scenes/Intro.unity
     guid: 201ac8c2618ebaf46a81f94422e52fb9
-  - enabled: 1
+  - enabled: 0
     path: Assets/Sample/Scenes/MLKitFaceDetectionDemo.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Sample/Scenes/MLKitFaceMeshDetectionDemo.unity
+    guid: 6fab725f5b6a7f3438078497dec8ed7e
   m_configObjects: {}
